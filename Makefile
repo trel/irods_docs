@@ -5,10 +5,12 @@ SHELL = /bin/bash
 MAKEGITHUBACCOUNT = irods
 MAKEIRODSVERSION = master
 MAKEDOXYGENVERSION = Release_1_8_14
+PIPARSERVERSION = pep
 
 IRODSTARGET = irods_for_doxygen
 DOXYGENTARGET = doxygen_for_docs
 VENVTARGET = venv3
+PIPARSERTARGET = peps_for_docs
 
 DOCS_SOURCE_DIR = docs
 
@@ -45,10 +47,17 @@ mkdocs : get_irods
 		popd; \
 		mkdocs build --clean
 
+peps :
+	@echo "Generating Dynamic PEP information..."
+	@if [ ! -d ${PIPARSERTARGET} ] ; then git clone https://github.com/xu-hao/piparser ${PIPARSERTARGET}; fi
+	@cd ${PIPARSERTARGET}; git pull; git checkout ${PIPARSERVERSION}
+	@cd ${PIPARSERTARGET}; \
+		dist/build/piparser/piparser out auth: "*.cpp" ../{$IRODSTARGET}/plugins/auth/native/ auth_ native_auth_ resource: "*.cpp" ../irods/plugins/resources/unixfilesystem/ resource_ unix_file_ database: "db_plugin.cpp" ../irods/plugins/database/src/ db_ db_ network: "*.cpp" ../irods/plugins/network/tcp/ network_ tcp_ api: "rs*.cpp" ../irods/server/api/src/ "" rs
+
 clean :
 	@echo "Cleaning..."
 	@rm -rf site
-	@rm -rf ${IRODSTARGET} ${DOXYGENTARGET} ${VENVTARGET}
+	@rm -rf ${IRODSTARGET} ${DOXYGENTARGET} ${VENVTARGET} ${PIPARSERTARGET}
 	@rm -rf ${DOCS_SOURCE_DIR}/doxygen
 	@rm -rf ${DOCS_SOURCE_DIR}/icommands
 	@rm -rf ${DOCS_SOURCE_DIR}/plugins/rule_engine_plugin_framework.md
